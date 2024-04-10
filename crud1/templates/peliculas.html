@@ -1,0 +1,353 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Películas</title>
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" type="text/css" href="{% static 'css/cssPeliculas.css' %}">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Bootstrap JS -->
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+</head>
+
+<body>
+    
+
+    {% block content %}
+    <div class="container mt-5">
+        <h2 class="text-center mb-4 animate_animated animate_fadeIn">Películas</h2>
+        <!-- Botón "Salir" en la parte superior derecha -->
+        <div class="container-fluid  py-2">
+            <div class="row justify-content-end">
+                <div class="col-md-6 text-right">
+                    <a href="{% url 'interfaz_sa' %}" class="btn btn-primary ml-2">Volver</a>
+                </div>
+            </div>
+        </div>
+        <div class="text-center mb-3">
+            <button id="btnAgregar" class="btn btn-success" data-toggle="modal"
+                data-target="#agregarPeliculaModal">Añadir</button>
+        </div>
+        <div id="peliculasList">
+            <!-- Aquí se listarán las películas existentes -->
+            {% for pelicula in peliculas %}
+            <div class="card mb-3">
+                <div class="row no-gutters">
+                    <div class="col-md-4">
+                        <img src="{{ pelicula.imagen.url }}" class="card-img" alt="{{ pelicula.titulo }}">
+                    </div>
+                    <div class="col-md-8">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ pelicula.titulo }}</h5>
+                            <p class="card-text">{{ pelicula.sinopsis }}</p>
+                            <p class="card-text"><small class="text-muted">Duración: {{ pelicula.duracion }}
+                                    minutos</small></p>
+                            <p class="card-text"><small class="text-muted">Género: {{ pelicula.genero }}</small></p>
+                            <p class="card-text"><small class="text-muted">Estado: {{ pelicula.estado }}</small></p>
+                            <p class="card-text"><small class="text-muted">Precio: {{ pelicula.precio }}</small></p>
+                            <tr>
+                                <!-- Otros campos de la película... -->
+                                <td>
+                                    <form action="{% url 'eliminar_pelicula' %}" method="post">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="titulo" value="{{ pelicula.titulo }}">
+                                        <!-- Agregar un campo oculto con el título de la película -->
+                                        <button type="submit" class="btn btn-danger">Eliminar</button>
+                                    </form>
+                                    <br>
+                                    <form>
+                                        <!-- Botón de editar para cada película -->
+                                        <button class="btn btn-primary editar-pelicula" data-id="{{ pelicula.id }}"
+                                            data-titulo="{{ pelicula.titulo }}" data-sinopsis="{{ pelicula.sinopsis }}"
+                                            data-duracion="{{ pelicula.duracion }}" data-genero="{{ pelicula.genero }}"
+                                            data-estado="{{ pelicula.estado }}" data-imagen="{{ pelicula.imagen.url }}"
+                                            data-precio="{{ pelicula.precio }}" data-toggle="modal"
+                                            data-target="#editarPeliculaModal">Editar</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        
+        <!-- Paginación -->
+        <div class="pagination justify-content-center mt-4">
+            <span class="step-links">
+                {% if peliculas.has_previous %}
+                <a href="?page=1">&laquo; Primera</a>
+                <a href="?page={{ peliculas.previous_page_number }}">Anterior</a>
+                {% endif %}
+
+                <span class="current">
+                    Página {{ peliculas.number }} de {{ peliculas.paginator.num_pages }}.
+                </span>
+
+                {% if peliculas.has_next %}
+                <a href="?page={{ peliculas.next_page_number }}">Siguiente</a>
+                <a href="?page={{ peliculas.paginator.num_pages }}">Última &raquo;</a>
+                {% endif %}
+            </span>
+        </div>
+    </div>
+    {% endblock %}
+
+
+    <!-- Modal para agregar película -->
+    <div class="modal fade" id="agregarPeliculaModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Agregar Nueva Película</h5>
+
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <!-- Formulario de inserción de película -->
+                    <form id="agregarPeliculaForm" method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label for="titulo">Título:</label>
+                            <input type="text" class="form-control" id="titulo" name="titulo" required pattern=".*\S.*">
+                        </div>
+                        <div class="form-group">
+                            <label for="sinopsis">Sinopsis:</label>
+                            <textarea class="form-control" id="sinopsis" name="sinopsis" required
+                                pattern=".*\S.*"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="duracion">Duración:</label>
+                            <input type="text" class="form-control" id="duracion" name="duracion" required pattern="\d*" maxlength="3">
+                            <small class="form-text text-muted">Tiempo en minutos.</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="genero">Género:</label>
+                            <select class="form-control" id="genero" name="genero" required pattern=".*\S.*">
+                                {% for genero in generos_comunes %}
+                                <option value="{{ genero }}">{{ genero }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="estado">Estado:</label>
+                            <select class="form-control" id="estado" name="estado" required pattern=".*\S.*">
+                                <option value="estreno">Estreno</option>
+                                <option value="no_disponible">No Disponible</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <div class="form-group">
+                                <label for="imagen">Imagen:</label>
+                                <input type="file" class="form-control-file" id="imagen" name="imagen" required
+                                    accept="image/*" onchange="previewImage(this)">
+                            </div>
+                            <div class="form-group">
+
+                                <label for="imagen-preview">Vista previa de la imagen:</label>
+                                <img id="imagen-preview" class="img-fluid" style="max-width: 200px;" src="#"
+                                    alt="Vista previa de la imagen" hidden>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="precio">Precio:</label>
+                            <input type="number" class="form-control" id="precio" name="precio" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Guardar</button>
+                    </form>
+                    <div id="successMessage" class="alert alert-success mt-3" style="display: none;">
+                        Película agregada exitosamente.
+                    </div>
+                    <br>
+                    <div id="errorMessage" class="alert alert-danger" style="display: none;"></div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para editar película -->
+    <div class="pelicula-menu">
+        <button class="btn btn-primary editar-pelicula" data-id="{{ pelicula.id }}">Editar</button>
+        <div class="menu-content" style="display: none;">
+            <!-- Aquí se mostrarán los datos de la película -->
+            <form id="editarPeliculaForm">
+                {% csrf_token %}
+                <input type="hidden" id="pelicula-id">
+                <div class="form-group">
+                    <label for="titulo-editar">Título:</label>
+                    <input type="text" class="form-control" id="titulo-editar" name="titulo" required>
+                </div>
+                <!-- Agrega los campos restantes de la película -->
+                <!-- ... -->
+                <button type="submit" class="btn btn-primary guardar-cambios">Guardar Cambios</button>
+            </form>
+        </div>
+    </div>
+
+
+
+
+    <!-- Bootstrap JS (jQuery is required) -->
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    
+
+    <script>
+        function previewImage(input) {
+            var preview = document.getElementById('imagen-preview');
+            if (input.files && input.files[0]) {
+                var reader = new FileReader();
+                reader.onload = function (e) {
+                    preview.src = e.target.result;
+                    preview.hidden = false; // Mostrar la imagen
+                }
+                reader.readAsDataURL(input.files[0]); // Leer el archivo seleccionado como una URL
+            } else {
+                preview.src = '#';
+                preview.hidden = true; // Ocultar la imagen si no se selecciona ninguna
+            }
+        }
+    </script>
+
+    <script>
+        $(document).ready(function () {
+            $('#agregarPeliculaForm').submit(function (event) {
+                event.preventDefault();
+                var form = $(this);
+                var formData = new FormData(form[0]);
+                $.ajax({
+                    type: form.attr('method'),
+                    url: form.attr('action'),
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function (response) {
+                        $('#successMessage').fadeIn().delay(2000).fadeOut();
+                        setTimeout(function () {
+                            form[0].reset();
+                            $('#agregarPeliculaModal').modal('hide');
+                        }, 2000);
+                    },
+                    error: function (error) {
+                        console.error('Error al agregar película:', error);
+                    }
+                });
+            });
+        });
+    </script>
+
+
+    <script>
+        $(document).ready(function () {
+            // Manejar el clic en el botón de eliminación
+            $('.eliminar-pelicula').click(function () {
+                var pelicula_id = $(this).data('id');
+                if (confirm('¿Estás seguro de que deseas eliminar esta película?')) {
+                    $.ajax({
+                        url: '/eliminar_pelicula/' + pelicula_id + '/',
+                        type: 'POST',
+                        dataType: 'json',
+                        beforeSend: function (xhr) {
+                            xhr.setRequestHeader('X-CSRFToken', '{{ csrf_token }}');
+                        },
+                        success: function (data) {
+                            if (data.success) {
+                                // Recargar la página después de eliminar la película
+                                location.reload();
+                            } else {
+                                alert(data.message);
+                            }
+                        },
+                        error: function (xhr, status, error) {
+                            console.error(xhr.responseText);
+                        }
+                    });
+                }
+            });
+        });
+    </script>
+
+    <!--validacion espacios en blanco-->
+    <script>
+        function validarCampos() {
+            var titulo = document.getElementById('titulo').value.trim();
+            var sinopsis = document.getElementById('sinopsis').value.trim();
+            var genero = document.getElementById('genero').value.trim();
+
+            if (titulo === '' || sinopsis === '' || genero === '') {
+                alert('Por favor, completa todos los campos.');
+                return false;
+            }
+
+            if (/^\s*$/.test(titulo) || /^\s*$/.test(sinopsis) || /^\s*$/.test(genero)) {
+                alert('Por favor, completa todos los campos.');
+                return false;
+            }
+
+            return true;
+        }
+    </script>
+
+<script>
+    // Espera a que el DOM esté completamente cargado
+    $(document).ready(function () {
+        // Manejar el clic en los botones de editar
+        $('.editar-pelicula').click(function () {
+            // Obtener los datos de la película desde los atributos data del botón
+            var id = $(this).data('id');
+            var titulo = $(this).data('titulo');
+            var sinopsis = $(this).data('sinopsis');
+            var duracion = $(this).data('duracion');
+            var genero = $(this).data('genero');
+            var estado = $(this).data('estado');
+            var imagen = $(this).data('imagen');
+            var precio = $(this).data('precio');
+
+            // Llenar los campos del formulario de edición con los datos de la película
+            $('#pelicula-id').val(id);
+            $('#titulo-editar').val(titulo);
+            $('#sinopsis-editar').val(sinopsis);
+            $('#duracion-editar').val(duracion);
+            $('#genero-editar').val(genero);
+            $('#estado-editar').val(estado);
+            $('#imagen-editar').val(imagen);
+            $('#precio-editar').val(precio);
+        });
+    });
+</script>
+
+    <script>
+        // Este Script hace que en duracion solo se ingresen 3 numeros como maximo
+$('#duracion').on('input', function() {
+    // Obtén el valor actual del campo de duración
+    var duracion = $(this).val();
+    // Elimina cualquier carácter que no sea un número
+    var numericValue = duracion.replace(/\D/g, '');
+    // Limita la longitud a 3 dígitos
+    var limitedValue = numericValue.substring(0, 3);
+    // Actualiza el valor del campo de duración con el valor limitado
+    $(this).val(limitedValue);
+});
+
+    </script>
+
+    
+</body>
+
+</html>

@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interfaz Taquillero</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.68/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.68/vfs_fonts.js"></script>
+
+
+
+</head>
+
+<body>
+    <div class="container mt-5">
+        <div class="row">
+            <div class="col-md-6">
+                <h4 class='text-center'>Administrador de películas</h4>
+
+                <div class="form-group">
+                    <label for="sala">Sala:</label>
+                    <select class="form-control" id="sala">
+                        <option value="seleccion_sala">Selecciona una sala</option>
+                        <option value="sala1">Sala 1</option>
+                        <option value="sala2">Sala 2</option>
+                        <option value="sala3">Sala 3</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="fecha">Fecha:</label>
+                    <input type="date" class="form-control" id="fecha" min="{% now 'Y-m-d' %}">
+                </div>
+
+                <div class="form-group">
+                    <label for="pelicula">Película:</label>
+                    <select class="form-control" id="pelicula">
+                        <option value="select">Selecciona una película</option>
+                        {% for pelicula in peliculas %}
+                        <option value="{{ pelicula.id }}">{{ pelicula.titulo }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Nuevo menú desplegable para las horas disponibles -->
+                <div class="form-group" id="horasDisponiblesDiv" style="display: none;">
+                    <label for="horasDisponibles">Horas Disponibles:</label>
+                    <select class="form-control" id="horasDisponibles">
+                        <option value="seleccion_hora">Selecciona una hora</option>
+                        <!-- Las opciones serán agregadas dinámicamente por JavaScript -->
+                    </select>
+                </div>
+
+                <div class="form-group" id="numeroBoletosDiv" style="display: none;">
+                    <label for="numeroBoletos">Número de Boletos:</label>
+                    <select class="form-control" id="numeroBoletos">
+                        <option value="1">1 boleto</option>
+                        <option value="2">2 boletos</option>
+                        <option value="3">3 boletos</option>
+                        <option value="4">4 boletos</option>
+                        <option value="5">5 boletos</option>
+                        <option value="6">6 boletos</option>
+                        <option value="7">7 boletos</option>
+                    </select>
+                </div>
+
+                <!-- Botón "Comprar Boletos" -->
+                <button type="button" class="btn btn-primary" id="comprarBoletos" style="display: none;">Comprar Boletos</button>
+            </div>
+        </div>
+    </div>
+    
+<!-- Modal de Confirmación de Compra -->
+<div class="modal fade" id="confirmacionModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Compra Confirmada</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                ¡La compra ha sido confirmada satisfactoriamente!
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+    <!-- Tabla de Confirmación de Compra -->
+    <div class="container mt-4" id="confirmacionCompra" style="display: none;">
+        <div class="row">
+            <div class="col-md-6">
+                <h4>Confirmación de Compra</h4>
+                <table class="table">
+                    <tbody>
+                        <tr>
+                            <td><strong>Sala:</strong></td>
+                            <td id="salaConfirmacion"></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Fecha:</strong></td>
+                            <td id="fechaConfirmacion"></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Película:</strong></td>
+                            <td id="peliculaConfirmacion"></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Hora:</strong></td>
+                            <td id="horaConfirmacion"></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Número de Boletos:</strong></td>
+                            <td id="boletosConfirmacion"></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <!-- Botones -->
+                <div class="form-group">
+                    <button type="button" class="btn btn-primary" id="confirmarCompra" data-toggle="modal" data-target="#confirmacionModal">Confirmar Compra</button>
+                    <button type="button" class="btn btn-success" id="imprimirTicket">Imprimir Ticket</button>
+                    <button type="button" class="btn btn-danger" id="cancelarCompra">Cancelar Compra</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    
+
+    <!-- Botón "Salir" en la parte superior derecha -->
+    <div class="container mt-3">
+        <div class="row justify-content-end">
+            <div class="col-md-6 text-right">
+                <a href="{% url 'login' %}" class="btn btn-danger">Salir</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Agrega enlaces a los archivos JavaScript de Bootstrap -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>+
+
+
+    <!-- Script de JavaScript -->
+    
+    
+    <script>
+        document.getElementById('pelicula').addEventListener('change', function () {
+            var peliculaId = this.value;
+
+            if (peliculaId !== 'select') {
+                // Mostrar el campo para el número de boletos
+                document.getElementById('numeroBoletosDiv').style.display = 'block';
+                // Mostrar el menú desplegable de horas disponibles
+                document.getElementById('horasDisponiblesDiv').style.display = 'block';
+                // Simular carga de horas disponibles (aquí puedes cargarlas desde una fuente de datos externa)
+                cargarHorasDisponibles(peliculaId);
+            } else {
+                // Ocultar el campo para el número de boletos si no se selecciona una película
+                document.getElementById('numeroBoletosDiv').style.display = 'none';
+                // Ocultar el menú desplegable de horas disponibles si no se selecciona una película
+                document.getElementById('horasDisponiblesDiv').style.display = 'none';
+                // Ocultar el botón de comprar boletos si no se selecciona una película
+                document.getElementById('comprarBoletos').style.display = 'none';
+            }
+        });
+
+        // Función para cargar las horas disponibles para la película seleccionada
+        function cargarHorasDisponibles(peliculaId) {
+            // Aquí puedes realizar una llamada AJAX para obtener las horas disponibles desde el servidor
+            // Por ahora, simularemos algunas horas disponibles
+            var horasDisponiblesSelect = document.getElementById('horasDisponibles');
+            // Limpiar opciones anteriores
+            horasDisponiblesSelect.innerHTML = '';
+
+            // Definir las 4 horas diferentes alternas
+            var horasAlternas = ['09:00', '13:00', '16:00', '19:00', '21:00'];
+
+            // Crear opciones para cada hora
+            for (var i = 0; i < horasAlternas.length; i++) {
+                var opcion = document.createElement('option');
+                opcion.value = horasAlternas[i];
+                opcion.text = horasAlternas[i];
+                horasDisponiblesSelect.appendChild(opcion);
+            }
+        }
+
+        // Evento al cambiar la hora disponible
+        document.getElementById('horasDisponibles').addEventListener('change', function () {
+            // Mostrar confirmación al seleccionar una hora
+            mostrarConfirmacion();
+        });
+
+        // Evento al cambiar el número de boletos
+        document.getElementById('numeroBoletos').addEventListener('change', function () {
+            // Mostrar confirmación al seleccionar el número de boletos
+            mostrarConfirmacion();
+        });
+
+        document.getElementById('confirmarCompra').addEventListener('click', function () {
+            // Aquí puedes agregar la lógica para procesar la compra, por ejemplo, redirigiendo a una página de confirmación
+            console.log('Compra confirmada.');
+
+            // Mostrar confirmación de compra
+            mostrarConfirmacion();
+        });
+
+        function mostrarConfirmacion() {
+            var sala = document.getElementById('sala').value;
+            var fecha = document.getElementById('fecha').value;
+            var pelicula = document.getElementById('pelicula').options[document.getElementById('pelicula').selectedIndex].text;
+            var hora = document.getElementById('horasDisponibles').value;
+            var boletos = document.getElementById('numeroBoletos').value;
+
+            // Mostrar los datos en la tabla de confirmación
+            document.getElementById('salaConfirmacion').innerText = sala;
+            document.getElementById('fechaConfirmacion').innerText = fecha;
+            document.getElementById('peliculaConfirmacion').innerText = pelicula;
+            document.getElementById('horaConfirmacion').innerText = hora;
+            document.getElementById('boletosConfirmacion').innerText = boletos;
+
+            // Mostrar la sección de confirmación de compra
+            document.getElementById('confirmacionCompra').style.display = 'block';
+        }
+
+
+        document.getElementById('imprimirTicket').addEventListener('click', function () {
+    // Genera un folio aleatorio
+    var folio = generarFolio();
+
+    // Genera el PDF
+    pdfMake.createPdf({
+        content: [
+            { text: 'CINE IMPERIAL', style: 'header' }, // Título fuera de la tabla
+            {
+                table: {
+                    widths: ['*', '*'],
+                    body: [
+                        [{ text: 'Detalles de Compra', style: 'header' }, ''],
+                        ['Folio', folio], // Agrega el folio a la tabla
+                        ['Sala', document.getElementById('salaConfirmacion').innerText],
+                        ['Fecha', document.getElementById('fechaConfirmacion').innerText],
+                        ['Película', document.getElementById('peliculaConfirmacion').innerText],
+                        ['Hora', document.getElementById('horaConfirmacion').innerText],
+                        ['Número de Boletos', document.getElementById('boletosConfirmacion').innerText]
+                    ]
+                }
+            }
+        ],
+        styles: {
+            header: {
+                fontSize: 18,
+                bold: true,
+                alignment: 'center',
+                margin: [0, 0, 0, 10] // Margen inferior de 10 unidades
+            }
+        }
+    }).download('ticket.pdf');
+});
+
+// Función para generar un folio aleatorio único
+function generarFolio() {
+    var caracteres = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    var folio = 'CineImperial_'; // Iniciales 
+    for (var i = 0; i < 6; i++) { // 6 caracteres adicionales después de las iniciales
+        folio += caracteres.charAt(Math.floor(Math.random() * caracteres.length));
+    }
+    return folio;
+}
+
+document.getElementById('cancelarCompra').addEventListener('click', function () {
+    limpiarCampos();
+});
+
+function limpiarCampos() {
+    document.getElementById('sala').value = 'seleccion_sala';
+    document.getElementById('fecha').value = '';
+    document.getElementById('pelicula').value = 'select';
+    document.getElementById('horasDisponibles').value = 'seleccion_hora';
+    document.getElementById('numeroBoletos').value = '1';
+    // También puedes ocultar la sección de confirmación de compra si es necesario
+    document.getElementById('confirmacionCompra').style.display = 'none';
+}
+
+
+    </script>
+</body>
+
+</html>

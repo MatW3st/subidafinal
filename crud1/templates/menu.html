@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cine Imperial</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        .menu-card {
+            position: fixed;
+            top: 50%;
+            right: 10%;
+            transform: translateY(-50%);
+            width: 350px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border: 1px solid #ced4da;
+            border-radius: 10px;
+        }
+
+        .zoom {
+            transition: transform 0.5s ease; /* Agrega una transición suave de 0.5 segundos */
+        }
+
+        .zoom:hover {
+            transform: scale(1.1); /* Aplica un zoom de 110% al hacer hover */
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="carouselExampleSlidesOnly" class="carousel slide" data-ride="carousel">
+        <div class="carousel-inner">
+            <div class="carousel-item active">
+                <img class="d-block w-50 ms-3 mt-5 zoom" src="../static/Fondo1.jpg" alt="First slide">
+            </div>
+        </div>
+    </div>
+    
+    <!-- Menú -->
+    <div class="menu-card">
+        <h5 class="text-center mb-4">Menú</h5>
+        <a href="{% url 'interfaz_sa' %}" class="btn btn-light btn-block mb-3">
+            <i class="fas fa-user mr-2 text-primary fa-lg"></i>Usuarios
+        </a>
+        <a href="{% url 'peliculas' %}" class="btn btn-light btn-block">
+            <i class="fas fa-film mr-2 text-primary fa-lg"></i>Películas
+        </a>
+        <a href="{% url 'login' %}" class="btn btn-danger btn-block mt-3">Cerrar Sesión</a>
+    </div>
+
+    <!-- Bootstrap JS (optional) -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+</body>
+
+</html>

@@ -1,0 +1,422 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interfaz SA</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+</head>
+
+<body>
+    <!-- Barra de navegación -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <a class="navbar-brand" href="#">Cine Imperial</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'menu' %}">
+                        <i class="fas fa-home fa-lg text-primary"></i> <!-- Icono para ir a menu.html -->
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'login' %}">
+                        <i class="fas fa-user fa-lg text-primary"></i> <!-- Icono de usuario -->
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'peliculas' %}">
+                        <i class="fas fa-film fa-lg text-primary"></i> <!-- Icono de usuario -->
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container mt-5">
+        <h2 class="text-center mb-4 animate_animated animate_fadeIn">Administrador de usuarios</h2>
+        <div class="row">
+            <!-- Botón para agregar usuario -->
+            <div class="col">
+                <button type="button" class="btn btn-success mb-3" data-toggle="modal"
+                    data-target="#agregarUsuarioModal">
+                    Agregar Usuario
+                </button>
+            </div>
+
+            <!-- Dropdownlist del tipo de usuario -->
+            <div class="col">
+                <div class="dropdown">
+                    <button class="btn btn-primary dropdown-toggle mb-3" type="button" id="dropdownTipoUsuario"
+                        data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        Tipo de Usuario
+                    </button>
+                    <div class="dropdown-menu" aria-labelledby="dropdownTipoUsuario">
+                        <a class="dropdown-item" href="#"
+                            onclick="filtrarUsuarios('tipo', 'sa'); updateSelectedOption('dropdownTipoUsuario', 'SA')">SA</a>
+                        <a class="dropdown-item" href="#"
+                            onclick="filtrarUsuarios('tipo', 'taquillero'); updateSelectedOption('dropdownTipoUsuario', 'Taquillero')">Taquillero</a>
+                        <a class="dropdown-item" href="#"
+                            onclick="filtrarUsuarios('tipo', 'todos'); updateSelectedOption('dropdownTipoUsuario', 'Todos')">Todos</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col">
+                <div class="dropdown">
+                    <button class="btn btn-primary dropdown-toggle mb-3" type="button" id="dropdownEstadoUsuario"
+                        data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        Estado del Usuario
+                    </button>
+                    <div class="dropdown-menu" aria-labelledby="dropdownEstadoUsuario">
+                        <a class="dropdown-item" href="#"
+                            onclick="filtrarUsuarios('estado', 'activo'); updateSelectedOption('dropdownEstadoUsuario', 'Activo')">Activo</a>
+                        <a class="dropdown-item" href="#"
+                            onclick="filtrarUsuarios('estado', 'inactivo'); updateSelectedOption('dropdownEstadoUsuario', 'Inactivo')">Inactivo</a>
+                        <a class="dropdown-item" href="#"
+                            onclick="filtrarUsuarios('estado', 'todos'); updateSelectedOption('dropdownEstadoUsuario', 'Todos')">Todos</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botón para ver películas -->
+            <div class="col">
+                <a href="{% url 'peliculas' %}" class="btn btn-primary">Películas</a>
+            </div>
+            <div>
+                <a href="{% url 'login' %}" class="btn btn-danger">Salir</a>
+            </div>
+
+            <!-- Barra de búsqueda -->
+            <div class="col input-group mb-3">
+                <input type="text" class="form-control" placeholder="Buscar usuarios..."
+                    aria-label="Buscar usuarios..." aria-describedby="basic-addon2"
+                    oninput="filtrarUsuarios('busqueda', this.value)">
+                <div class="input-group-append">
+                    <button class="btn btn-outline-secondary" type="button">Buscar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabla de usuarios -->
+        <table class="table">
+            <thead>
+                <tr>
+                    <th scope="col">Nombre de Usuario</th>
+                    <th scope="col">Tipo de Usuario</th>
+                    <th scope="col">Estado</th>
+                    <th scope="col">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for usuario in usuarios %}
+                <tr>
+                    <td>{{ usuario.nombre_usuario }}</td>
+                    <td>{{ usuario.tipo_usuario }}</td>
+                    <td>{{ usuario.estado }}</td>
+                    <td>
+                        <button type="button" class="btn btn-primary btn-sm" onclick="editarUsuario('{{ usuario.id }}')">
+                            Editar
+                        </button>                        
+                        <a href="{% url 'eliminar_usuario' usuario.id %}"
+                            class="btn btn-danger btn-sm {% if usuario.nombre_usuario == 'sa' %}disabled{% endif %}"
+                            {% if usuario.nombre_usuario == 'sa' %}onclick="return false;" {% endif %}>
+                            Eliminar
+                        </a>
+                    </td>
+                </tr>
+                <!-- Modal para editar usuario -->
+                <div class="modal fade" id="editarUsuarioModal{{ usuario.id }}" tabindex="-1" role="dialog"
+    aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Editar Usuario</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="editarUsuarioForm{{ usuario.id }}" method="post" data-url="{% url 'editar_usuario' usuario.id %}">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="nombreUsuario" class="white-text">Nombre de Usuario:</label>
+                        <input type="text" class="form-control" id="nombreUsuario{{ usuario.id }}"
+                            name="nombre_usuario" value="{{ usuario.nombre_usuario }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="tipoUsuario" class="white-text">Tipo de Usuario:</label>
+                        <select class="form-control" id="tipoUsuario{{ usuario.id }}" name="tipo_usuario"
+                            required>
+                            <option value="sa" {% if usuario.tipo_usuario == 'sa' %}selected{% endif %}>SA</option>
+                            <option value="taquillero" {% if usuario.tipo_usuario == 'taquillero' %}selected{% endif %}>Taquillero</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="estado" class="white-text">Estado:</label>
+                        <select class="form-control" id="estado{{ usuario.id }}" name="estado" required>
+                            <option value="activo" {% if usuario.estado == 'activo' %}selected{% endif %}>Activo</option>
+                            <option value="inactivo" {% if usuario.estado == 'inactivo' %}selected{% endif %}>Inactivo</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- Paginación -->
+<div class="pagination justify-content-center">
+    <ul class="pagination">
+        {% if usuarios.has_previous %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ usuarios.previous_page_number }}">Anterior</a>
+        </li>
+        {% endif %}
+        {% for i in usuarios.paginator.page_range %}
+        <li class="page-item {% if usuarios.number == i %}active{% endif %}">
+            <a class="page-link" href="?page={{ i }}">{{ i }}</a>
+        </li>
+        {% endfor %}
+        {% if usuarios.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ usuarios.next_page_number }}">Siguiente</a>
+        </li>
+        {% endif %}
+    </ul>
+</div>
+
+        <!-- Modal de confirmación de edición exitosa -->
+<div class="modal fade" id="editSuccessModal" tabindex="-1" role="dialog" aria-labelledby="editSuccessModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editSuccessModalLabel">Edición Exitosa</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                El usuario ha sido editado exitosamente.
+            </div>
+        </div>
+    </div>
+</div>
+
+
+        
+
+        <!-- Modal para agregar usuario -->
+        <div class="modal fade" id="agregarUsuarioModal" tabindex="-1" role="dialog"
+            aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel">Agregar Nuevo Usuario</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- Formulario para agregar usuario -->
+                        <form id="agregarUsuarioForm" action="{% url 'guardar_usuario' %}" method="post"
+                            data-submitted="false">
+                            {% csrf_token %}
+                            <div class="form-group">
+                                <label for="nombreUsuario">Nombre de Usuario:</label>
+                                <input type="text" class="form-control" id="nombreUsuario" name="nombre_usuario"
+                                    required>
+                            </div>
+                            <div class="form-group">
+                                <label for="contraseña">Contraseña:</label>
+                                <input type="password" class="form-control" id="contraseña" name="contraseña"
+                                    required>
+                            </div>
+                            <div class="form-group">
+                                <label for="confirmarContraseña">Confirmar Contraseña:</label>
+                                <input type="password" class="form-control" id="confirmarContraseña"
+                                    name="confirmar_contraseña" required>
+                                <div id="passwordMismatch" class="invalid-feedback" style="display: none;">
+                                    Las contraseñas no coinciden.
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="tipoUsuario">Tipo de Usuario:</label>
+                                <select class="form-control" id="tipoUsuario" name="tipo_usuario" required>
+                                    <option value="sa">SA</option>
+                                    <option value="taquillero">Taquillero</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="estado">Estado:</label>
+                                <select class="form-control" id="estado" name="estado" required>
+                                    <option value="activo">Activo</option>
+                                    <option value="inactivo">Inactivo</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Guardar</button>
+                        </form>
+                        {% if messages %}
+                        <div class="alert alert-danger mt-3">
+                            {% for message in messages %}
+                            <p>{{ message }}</p>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        <div id="successMessage" class="alert alert-success mt-3" style="display: none;">
+                            Usuario agregado exitosamente.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS (optional) -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <script>
+        function updateSelectedOption(buttonId, selectedOption) {
+            var button = document.getElementById(buttonId);
+            button.innerText = selectedOption;
+        }
+    </script>
+
+    <script>
+        document.getElementById('agregarUsuarioForm').addEventListener('submit', function (event) {
+            var password = document.getElementById('contraseña').value;
+            var confirmPassword = document.getElementById('confirmarContraseña').value;
+            if (password !== confirmPassword) {
+                event.preventDefault();
+                document.getElementById('passwordMismatch').style.display = 'block';
+            } else {
+                document.getElementById('passwordMismatch').style.display = 'none';
+            }
+        });
+
+        // Manejar el mensaje de éxito después de guardar el usuario
+        document.getElementById('agregarUsuarioForm').addEventListener('submit', function (event) {
+            event.preventDefault(); // Prevenir el envío del formulario para manejarlo con AJAX
+            var form = event.target;
+            var formData = new FormData(form);
+            fetch(form.action, {
+                method: 'POST',
+                body: formData
+            })
+                .then(response => {
+                    if (response.ok) {
+                        document.getElementById('successMessage').style.display = 'block';
+                        form.reset(); // Limpiar el formulario después de guardar exitosamente
+                        $('#agregarUsuarioModal').modal('hide'); // Cierra el modal después de agregar el usuario
+                    }
+                })
+                .catch(error => console.error('Error al guardar usuario:', error))
+                .finally(() => {
+                    $('#agregarUsuarioModal').modal('hide'); // Cierra el modal después de cualquier resultado, incluso si hay un error
+                });
+        });
+    </script>
+
+    <script>
+        function filtrarUsuarios(tipo, valor) {
+            var filas = document.querySelectorAll('tbody tr');
+            filas.forEach(function (fila) {
+                var tipoUsuario = fila.querySelector('td:nth-child(2)').textContent.toLowerCase();
+                var estadoUsuario = fila.querySelector('td:nth-child(3)').textContent.toLowerCase();
+                var nombreUsuario = fila.querySelector('td:nth-child(1)').textContent.toLowerCase();
+
+                if ((tipo === 'tipo' && (valor === 'todos' || tipoUsuario === valor)) ||
+                    (tipo === 'estado' && (valor === 'todos' || estadoUsuario === valor)) ||
+                    (tipo === 'busqueda' && nombreUsuario.includes(valor.toLowerCase()))) {
+                    fila.style.display = '';
+                } else {
+                    fila.style.display = 'none';
+                }
+            });
+        }
+    </script>
+
+    <script>
+        $('#agregarUsuarioModal').on('hidden.bs.modal', function (e) {
+            document.getElementById('agregarUsuarioForm').reset();
+            document.getElementById('successMessage').style.display = 'none';
+            document.getElementById('passwordMismatch').style.display = 'none';
+        });
+    </script>
+    <script>
+        document.querySelectorAll('.modal-body form').forEach(form => {
+            form.addEventListener('submit', function (event) {
+                event.preventDefault();
+                var formData = new FormData(this);
+                var url = this.dataset.url;
+                fetch(url, {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => {
+                    if (response.ok) {
+                        $('#editarUsuarioModal{{ usuario.id }}').modal('hide'); // Cierra el modal después de guardar exitosamente
+                    }
+                })
+                .catch(error => console.error('Error al guardar usuario:', error));
+            });
+        });
+    </script>
+
+<script>
+    document.querySelectorAll('.modal-body form').forEach(form => {
+        form.addEventListener('submit', function (event) {
+            event.preventDefault();
+            var formData = new FormData(this);
+            var url = this.dataset.url;
+            fetch(url, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (response.ok) {
+                    $('#editarUsuarioModal{{ usuario.id }}').modal('hide'); // Cierra el modal después de guardar exitosamente
+                    $('#editSuccessModal').modal('show'); // Muestra el modal de edición exitosa
+                }
+            })
+            .catch(error => console.error('Error al guardar usuario:', error));
+        });
+    });
+</script>
+<script>
+    function editarUsuario(usuarioId) {
+        fetch(`/editar_usuario/${usuarioId}/`)
+            .then(response => response.json())
+            .then(data => {
+                // Rellenar el formulario de edición con los datos del usuario
+                document.getElementById('nombreUsuario').value = data.nombre_usuario;
+                document.getElementById('tipoUsuario').value = data.tipo_usuario;
+                document.getElementById('estado').value = data.estado;
+
+                // Mostrar el modal de edición
+                $('#editarUsuarioModal').modal('show');
+            })
+            .catch(error => console.error('Error al obtener datos del usuario:', error));
+    }
+</script>
+
+
+</body>
+
+</html>
